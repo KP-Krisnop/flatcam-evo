@@ -220,6 +220,7 @@ class TreeItem(EventSensitiveListView):
     def remove_child(self, item):
         child = self.child_items.pop(self.child_items.index(item))
         child.obj.clear(True)
+        # delete() handles ui_disconnect(), blockSignals(), deleteLater(), and sets ui = None
         child.obj.delete()
         del child.obj
         del child
@@ -227,6 +228,7 @@ class TreeItem(EventSensitiveListView):
     def remove_children(self):
         for child in self.child_items:
             child.obj.clear()
+            # delete() handles ui_disconnect(), blockSignals(), deleteLater(), and sets ui = None
             child.obj.delete()
             del child.obj
             del child

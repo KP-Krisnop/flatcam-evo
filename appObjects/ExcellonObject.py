@@ -198,6 +198,9 @@ class ExcellonObject(FlatCAMObj, Excellon):
         self.change_level(app_mode)
 
     def set_offset_values(self):
+        if self.deleted or self.ui is None:
+            return
+
         xmin, ymin, xmax, ymax = self.bounds()
         center_coords = (
             self.app.dec_format((xmin + abs((xmax - xmin) / 2)), self.decimals),
@@ -206,7 +209,6 @@ class ExcellonObject(FlatCAMObj, Excellon):
         try:
             self.ui.offsetvector_entry.set_value(str(center_coords))
         except (RuntimeError, AttributeError):
-            # UI widget may have been deleted (e.g. worker thread updating after tab closed)
             pass
 
     def change_level(self, level):
@@ -567,6 +569,8 @@ class ExcellonObject(FlatCAMObj, Excellon):
         :return:    None
         :rtype:
         """
+        if self.deleted or self.ui is None:
+            return
 
         # selective plotting
         for row in range(self.ui.tools_table.rowCount() - 2):
@@ -583,6 +587,9 @@ class ExcellonObject(FlatCAMObj, Excellon):
         :return:    None
         :rtype:
         """
+        if self.deleted or self.ui is None:
+            return
+
         # selective plotting
         for row in range(self.ui.tools_table.rowCount()):
             try:

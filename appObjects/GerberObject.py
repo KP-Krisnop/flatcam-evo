@@ -205,6 +205,9 @@ class GerberObject(FlatCAMObj, Gerber):
         self.set_offset_values()
 
     def set_offset_values(self):
+        if self.deleted or self.ui is None:
+            return
+
         xmin, ymin, xmax, ymax = self.bounds()
         center_coords = (
             self.app.dec_format((xmin + abs((xmax - xmin) / 2)), self.decimals),
@@ -213,7 +216,6 @@ class GerberObject(FlatCAMObj, Gerber):
         try:
             self.ui.offsetvector_entry.set_value(str(center_coords))
         except (RuntimeError, AttributeError):
-            # UI widget may have been deleted (e.g. worker thread updating after tab closed)
             pass
 
     def change_level(self, level):
@@ -383,10 +385,12 @@ class GerberObject(FlatCAMObj, Gerber):
             self.ui_connect()
 
     def ui_connect(self):
+        if self.deleted or self.ui is None:
+            return
+
         try:
             row_count = self.ui.apertures_table.rowCount()
         except (RuntimeError, AttributeError):
-            # UI widget has been deleted
             return
 
         for row in range(row_count):
@@ -409,10 +413,12 @@ class GerberObject(FlatCAMObj, Gerber):
             pass
 
     def ui_disconnect(self):
+        if self.deleted or self.ui is None:
+            return
+
         try:
             row_count = self.ui.apertures_table.rowCount()
         except (RuntimeError, AttributeError):
-            # UI widget has been deleted
             return
 
         for row in range(row_count):
@@ -1112,6 +1118,8 @@ class GerberObject(FlatCAMObj, Gerber):
         Will mark aperture geometries on canvas or delete the markings depending on the checkbox state
         :return:
         """
+        if self.deleted or self.ui is None:
+            return
 
         self.ui_disconnect()
         try:

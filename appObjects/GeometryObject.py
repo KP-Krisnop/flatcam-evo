@@ -438,6 +438,9 @@ class GeometryObject(FlatCAMObj, Geometry):
             self.ui.geo_tools_table.selectAll()
 
     def set_offset_values(self):
+        if self.deleted or self.ui is None:
+            return
+
         xmin, ymin, xmax, ymax = self.bounds()
         center_coords = (
             self.app.dec_format((xmin + abs((xmax - xmin) / 2)), self.decimals),
@@ -446,7 +449,6 @@ class GeometryObject(FlatCAMObj, Geometry):
         try:
             self.ui.offsetvector_entry.set_value(str(center_coords))
         except (RuntimeError, AttributeError):
-            # UI widget may have been deleted (e.g. worker thread updating after tab closed)
             pass
 
     def change_level(self, level):
@@ -555,12 +557,18 @@ class GeometryObject(FlatCAMObj, Geometry):
         self.app.worker_task.emit({'fcn': task_job, 'params': []})
 
     def ui_connect(self):
+        if self.deleted or self.ui is None:
+            return
+
         for row in range(self.ui.geo_tools_table.rowCount()):
             self.ui.geo_tools_table.cellWidget(row, 6).clicked.connect(self.on_plot_cb_click_table)
 
         self.ui.plot_cb.stateChanged.connect(self.on_plot_cb_click)
 
     def ui_disconnect(self):
+        if self.deleted or self.ui is None:
+            return
+
         for row in range(self.ui.geo_tools_table.rowCount()):
             try:
                 self.ui.geo_tools_table.cellWidget(row, 6).clicked.disconnect()

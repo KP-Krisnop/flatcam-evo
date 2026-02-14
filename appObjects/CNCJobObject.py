@@ -627,6 +627,9 @@ class CNCJobObject(FlatCAMObj, CNCjob):
             self.ui.annotation_cb.show()
 
     def ui_connect(self):
+        if self.deleted or self.ui is None:
+            return
+
         for row in range(self.ui.cnc_tools_table.rowCount()):
             try:
                 self.ui.cnc_tools_table.cellWidget(row, 6).clicked.connect(self.on_plot_cb_click_table)
@@ -640,6 +643,9 @@ class CNCJobObject(FlatCAMObj, CNCjob):
         self.ui.plot_cb.stateChanged.connect(self.on_plot_cb_click)
 
     def ui_disconnect(self):
+        if self.deleted or self.ui is None:
+            return
+
         for row in range(self.ui.cnc_tools_table.rowCount()):
             try:
                 self.ui.cnc_tools_table.cellWidget(row, 6).clicked.disconnect(self.on_plot_cb_click_table)

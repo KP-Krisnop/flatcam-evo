@@ -1000,9 +1000,27 @@ class FlatCAMObj(QtCore.QObject):
         self._drawing_tolerance = value if self.units == 'MM' or not self.units else value / 25.4
 
     def delete(self):
-        # Free resources
-        del self.ui
-        del self.obj_options
-
-        # Set flag
+        # Set flag early to prevent signal handlers from running
         self.deleted = True
+
+        # Disconnect all signal/slot connections before destroying the UI
+        try:
+            self.ui_disconnect()
+        except Exception:
+            pass
+
+        # Suppress any in-flight queued signals
+        try:
+            self.ui.blockSignals(True)
+        except (RuntimeError, AttributeError):
+            pass
+
+        # Let Qt event loop clean up the C++ widget safely
+        try:
+            self.ui.deleteLater()
+        except (RuntimeError, AttributeError):
+            pass
+
+        # Clear Python references so other code can guard with "self.ui is None"
+        self.ui = None
+        del self.obj_options
