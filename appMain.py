@@ -4401,22 +4401,26 @@ class App(QtCore.QObject):
                 obj_list = app_obj.collection.get_list()
 
                 for obj in obj_list:
-                    obj.offset((x, y))
-                    app_obj.app_obj.object_changed.emit(obj)
-
-                    # Update the object bounding box options
-                    a, b, c, d = obj.bounds()
-                    obj.obj_options['xmin'] = a
-                    obj.obj_options['ymin'] = b
-                    obj.obj_options['xmax'] = c
-                    obj.obj_options['ymax'] = d
-
-                    # make sure to update the Offset field in Properties Tab
                     try:
-                        obj.set_offset_values()
-                    except AttributeError:
-                        # not all objects have this attribute
-                        pass
+                        obj.offset((x, y))
+                        app_obj.app_obj.object_changed.emit(obj)
+
+                        # Update the object bounding box options
+                        a, b, c, d = obj.bounds()
+                        obj.obj_options['xmin'] = a
+                        obj.obj_options['ymin'] = b
+                        obj.obj_options['xmax'] = c
+                        obj.obj_options['ymax'] = d
+
+                        # make sure to update the Offset field in Properties Tab
+                        try:
+                            obj.set_offset_values()
+                        except AttributeError:
+                            # not all objects have this attribute
+                            pass
+                    except Exception as e:
+                        self.log.error("on_set_zero_click: offset failed for %s -> %s" %
+                                       (obj.obj_options.get('name', '?'), str(e)))
 
                 app_obj.inform.emit('[success] %s...' % _('Origin set'))
 
@@ -4424,15 +4428,19 @@ class App(QtCore.QObject):
                 for obj in obj_list:
                     out_name = obj.obj_options["name"]
 
-                    if obj.kind == 'gerber':
-                        obj.source_file = app_obj.f_handlers.export_gerber(
-                            obj_name=out_name, filename=None, local_use=obj, use_thread=False)
-                    elif obj.kind == 'excellon':
-                        obj.source_file = app_obj.f_handlers.export_excellon(
-                            obj_name=out_name, filename=None, local_use=obj, use_thread=False)
-                    elif obj.kind == 'geometry':
-                        obj.source_file = app_obj.f_handlers.export_dxf(
-                            obj_name=out_name, filename=None, local_use=obj, use_thread=False)
+                    try:
+                        if obj.kind == 'gerber':
+                            obj.source_file = app_obj.f_handlers.export_gerber(
+                                obj_name=out_name, filename=None, local_use=obj, use_thread=False)
+                        elif obj.kind == 'excellon':
+                            obj.source_file = app_obj.f_handlers.export_excellon(
+                                obj_name=out_name, filename=None, local_use=obj, use_thread=False)
+                        elif obj.kind == 'geometry':
+                            obj.source_file = app_obj.f_handlers.export_dxf(
+                                obj_name=out_name, filename=None, local_use=obj, use_thread=False)
+                    except Exception as e:
+                        app_obj.log.error("on_set_zero_click: export failed for %s -> %s" %
+                                          (out_name, str(e)))
                 if noplot_sig is False:
                     app_obj.replot_signal.emit([])
 
@@ -4520,23 +4528,27 @@ class App(QtCore.QObject):
                 y = min(yminlist)
 
                 for obj in obj_list:
-                    obj.offset((-x, -y))
-                    self.app_obj.object_changed.emit(obj)
-
-                    # Update the object bounding box options
-                    a, b, c, d = obj.bounds()
-                    obj.obj_options['xmin'] = a
-                    obj.obj_options['ymin'] = b
-                    obj.obj_options['xmax'] = c
-                    obj.obj_options['ymax'] = d
-
-                    # make sure to update the Offset field in Properties Tab
                     try:
-                        obj.set_offset_values()
-                    except (AttributeError, RuntimeError):
-                        # AttributeError: not all objects have this attribute
-                        # RuntimeError: UI widget was deleted (worker thread safety)
-                        pass
+                        obj.offset((-x, -y))
+                        self.app_obj.object_changed.emit(obj)
+
+                        # Update the object bounding box options
+                        a, b, c, d = obj.bounds()
+                        obj.obj_options['xmin'] = a
+                        obj.obj_options['ymin'] = b
+                        obj.obj_options['xmax'] = c
+                        obj.obj_options['ymax'] = d
+
+                        # make sure to update the Offset field in Properties Tab
+                        try:
+                            obj.set_offset_values()
+                        except (AttributeError, RuntimeError):
+                            # AttributeError: not all objects have this attribute
+                            # RuntimeError: UI widget was deleted (worker thread safety)
+                            pass
+                    except Exception as e:
+                        self.log.error("on_move2origin: offset failed for %s -> %s" %
+                                       (obj.obj_options.get('name', '?'), str(e)))
 
                 self.batch_replot_signal.emit(obj_list, True, "")
 
@@ -5007,7 +5019,7 @@ class App(QtCore.QObject):
                 elif isinstance(obj, GeometryObject):
                     self.app_obj.new_object("geometry", outname, initialize_geometry)
             except Exception as er:
-                return "Operation failed: %s" % str(er)
+                self.log.error("on_copy_object2: failed for %s -> %s" % (obj_name, str(er)))
 
     def on_rename_object(self, text):
         """
@@ -5534,16 +5546,20 @@ class App(QtCore.QObject):
 
                 px = 0.5 * (xminimal + xmaximal)
                 py = 0.5 * (yminimal + ymaximal)
-
-                # execute mirroring
-                for obj in obj_list:
-                    obj.mirror('X', [px, py])
-                    obj.plot()
-                    self.app_obj.object_changed.emit(obj)
-                self.inform.emit('[success] %s.' % _("Flip on Y axis done"))
             except Exception as e:
                 self.inform.emit('[ERROR_NOTCL] %s: %s.' % (_("Action was not executed"), str(e)))
                 return
+
+            # execute mirroring
+            for obj in obj_list:
+                try:
+                    obj.mirror('X', [px, py])
+                    obj.plot()
+                    self.app_obj.object_changed.emit(obj)
+                except Exception as e:
+                    self.log.error("on_flipy: failed for %s -> %s" %
+                                   (obj.obj_options.get('name', '?'), str(e)))
+            self.inform.emit('[success] %s.' % _("Flip on Y axis done"))
 
     def on_flipx(self):
         """
@@ -5580,16 +5596,20 @@ class App(QtCore.QObject):
 
                 px = 0.5 * (xminimal + xmaximal)
                 py = 0.5 * (yminimal + ymaximal)
-
-                # execute mirroring
-                for obj in obj_list:
-                    obj.mirror('Y', [px, py])
-                    obj.plot()
-                    self.app_obj.object_changed.emit(obj)
-                self.inform.emit('[success] %s.' % _("Flip on X axis done"))
             except Exception as e:
                 self.inform.emit('[ERROR_NOTCL] %s: %s.' % (_("Action was not executed"), str(e)))
                 return
+
+            # execute mirroring
+            for obj in obj_list:
+                try:
+                    obj.mirror('Y', [px, py])
+                    obj.plot()
+                    self.app_obj.object_changed.emit(obj)
+                except Exception as e:
+                    self.log.error("on_flipx: failed for %s -> %s" %
+                                   (obj.obj_options.get('name', '?'), str(e)))
+            self.inform.emit('[success] %s.' % _("Flip on X axis done"))
 
     def on_rotate(self, silent=False, preset=None):
         """
@@ -5639,15 +5659,19 @@ class App(QtCore.QObject):
                     ymaximal = max(ymaxlist)
                     px = 0.5 * (xminimal + xmaximal)
                     py = 0.5 * (yminimal + ymaximal)
-
-                    for sel_obj in obj_list:
-                        sel_obj.rotate(-float(num), point=(px, py))
-                        sel_obj.plot()
-                        self.app_obj.object_changed.emit(sel_obj)
-                    self.inform.emit('[success] %s' % _("Rotation done."))
                 except Exception as e:
                     self.inform.emit('[ERROR_NOTCL] %s: %s' % (_("Rotation movement was not executed."), str(e)))
                     return
+
+                for sel_obj in obj_list:
+                    try:
+                        sel_obj.rotate(-float(num), point=(px, py))
+                        sel_obj.plot()
+                        self.app_obj.object_changed.emit(sel_obj)
+                    except Exception as e:
+                        self.log.error("on_rotate: failed for %s -> %s" %
+                                       (sel_obj.obj_options.get('name', '?'), str(e)))
+                self.inform.emit('[success] %s' % _("Rotation done."))
 
     def on_skewx(self):
         """
@@ -5684,17 +5708,21 @@ class App(QtCore.QObject):
                 yminimal = min(yminlist)
 
                 for obj in obj_list:
-                    obj.skew(num, 0, point=(xminimal, yminimal))
-
-                    # make sure to update the Offset field in Properties Tab
                     try:
-                        obj.set_offset_values()
-                    except AttributeError:
-                        # not all objects have this attribute
-                        pass
+                        obj.skew(num, 0, point=(xminimal, yminimal))
 
-                    obj.plot()
-                    self.app_obj.object_changed.emit(obj)
+                        # make sure to update the Offset field in Properties Tab
+                        try:
+                            obj.set_offset_values()
+                        except AttributeError:
+                            # not all objects have this attribute
+                            pass
+
+                        obj.plot()
+                        self.app_obj.object_changed.emit(obj)
+                    except Exception as e:
+                        self.log.error("on_skewx: failed for %s -> %s" %
+                                       (obj.obj_options.get('name', '?'), str(e)))
                 self.inform.emit('[success] %s' % _("Skew on X axis done."))
 
     def on_skewy(self):
@@ -5732,17 +5760,21 @@ class App(QtCore.QObject):
                 yminimal = min(yminlist)
 
                 for obj in obj_list:
-                    obj.skew(0, num, point=(xminimal, yminimal))
-
-                    # make sure to update the Offset field in Properties Tab
                     try:
-                        obj.set_offset_values()
-                    except AttributeError:
-                        # not all objects have this attribute
-                        pass
+                        obj.skew(0, num, point=(xminimal, yminimal))
 
-                    obj.plot()
-                    self.app_obj.object_changed.emit(obj)
+                        # make sure to update the Offset field in Properties Tab
+                        try:
+                            obj.set_offset_values()
+                        except AttributeError:
+                            # not all objects have this attribute
+                            pass
+
+                        obj.plot()
+                        self.app_obj.object_changed.emit(obj)
+                    except Exception as e:
+                        self.log.error("on_skewy: failed for %s -> %s" %
+                                       (obj.obj_options.get('name', '?'), str(e)))
                 self.inform.emit('[success] %s' % _("Skew on Y axis done."))
 
     def on_plots_updated(self):
