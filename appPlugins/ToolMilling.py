@@ -709,6 +709,10 @@ class ToolMilling(Excellon, AppTool):
         self.on_level_changed(self.ui.level.isChecked())
 
     def on_level_changed(self, checked):
+        import traceback
+        print("[DIAG] on_level_changed() ENTRY | checked=%s (mode=%s)" %
+              (checked, 'Advanced' if checked else 'Basic'), file=sys.stderr, flush=True)
+        print("[DIAG]   called from:\n%s" % ''.join(traceback.format_stack()[-4:-1]), file=sys.stderr, flush=True)
 
         self.target_obj = self.app.collection.get_by_name(self.ui.object_combo.get_value())
 
@@ -738,9 +742,16 @@ class ToolMilling(Excellon, AppTool):
                         # some will disable some of the hidden features but other are set by
                         # other plugins so, we hide them, but we do not disable (like the `multidepth`)
                         # tool_data['tools_mill_multidepth'] = False
-                        tool_data['tools_mill_extracut'] = self.app.options["tools_mill_extracut"]
-                        tool_data['tools_mill_dwell'] = self.app.options["tools_mill_dwell"]
-                        tool_data['tools_mill_area_exclusion'] = False
+                        # tool_data['tools_mill_extracut'] = self.app.options["tools_mill_extracut"]
+                        # tool_data['tools_mill_dwell'] = self.app.options["tools_mill_dwell"]
+                        # tool_data['tools_mill_area_exclusion'] = False
+
+                        print("[DIAG] on_level_changed(Basic) tool=%s | dwell=%s, dwelltime=%s, "
+                              "extracut=%s, multidepth=%s" %
+                              (tool, tool_data.get('tools_mill_dwell'),
+                               tool_data.get('tools_mill_dwelltime'),
+                               tool_data.get('tools_mill_extracut'),
+                               tool_data.get('tools_mill_multidepth')), file=sys.stderr, flush=True)
 
                 self.ui.offset_type_lbl.hide()
                 self.ui.offset_type_combo.hide()
@@ -800,9 +811,11 @@ class ToolMilling(Excellon, AppTool):
                         # some will disable some of the hidden features but other are set by
                         # other plugins so, we hide them but, we do not disable (like the `multidepth`)
                         # tool_data['tools_mill_multidepth'] = app_defaults['tools_mill_multidepth']
-                        tool_data['tools_mill_extracut'] = app_defaults['tools_mill_extracut']
-                        tool_data['tools_mill_dwell'] = app_defaults['tools_mill_dwell']
-                        tool_data['tools_mill_area_exclusion'] = app_defaults['tools_mill_area_exclusion']
+                        # tool_data['tools_mill_extracut'] = app_defaults['tools_mill_extracut']
+                        # tool_data['tools_mill_dwell'] = app_defaults['tools_mill_dwell']
+                        # tool_data['tools_mill_area_exclusion'] = app_defaults['tools_mill_area_exclusion']
+                        print("[DIAG] on_level_changed(Advanced) tool=%s | dwell=%s (preserved)" %
+                              (tool, tool_data.get('tools_mill_dwell')), file=sys.stderr, flush=True)
 
                 self.ui.offset_type_lbl.show()
                 self.ui.offset_type_combo.show()
@@ -1707,6 +1720,12 @@ class ToolMilling(Excellon, AppTool):
         else:
             plugin_table = self.ui.tools_table_mill_geo
 
+        if self.target_obj and self.target_obj.tools:
+            for uid, tdata in self.target_obj.tools.items():
+                print("[DIAG] on_row_selection_change() BEFORE update_ui | tool=%s, dwell=%s, dwelltime=%s" %
+                      (uid, tdata['data'].get('tools_mill_dwell'), tdata['data'].get('tools_mill_dwelltime')),
+                      file=sys.stderr, flush=True)
+
         self.update_ui()
 
         sel_model = plugin_table.selectionModel()
@@ -1817,6 +1836,11 @@ class ToolMilling(Excellon, AppTool):
                 return
             storage = self.app.options if self.target_obj is None else self.target_obj.obj_options
 
+        print("[DIAG] to_form() | dwell=%s, dwelltime=%s, source=%s" %
+              (storage.get('tools_mill_dwell'), storage.get('tools_mill_dwelltime'),
+               'tool_data' if isinstance(storage, dict) and 'tools_mill_tooldia' in storage else 'obj_options'),
+              file=sys.stderr, flush=True)
+
         # calculate self.currnet_row for the cellWidgets in the Tools Table
         if self.ui.target_radio.get_value() == 'geo':
             t_table = self.ui.tools_table_mill_geo
@@ -1863,6 +1887,10 @@ class ToolMilling(Excellon, AppTool):
         else:
             t_table = self.ui.tools_table_mill_exc
         self.current_row = t_table.currentRow()
+
+        print("[DIAG] storage_to_form() | dwell=%s, dwelltime=%s (from dict_storage)" %
+              (dict_storage.get('tools_mill_dwell'), dict_storage.get('tools_mill_dwelltime')),
+              file=sys.stderr, flush=True)
 
         for storage_key in dict_storage:
             if storage_key in list(self.form_fields.keys()) and storage_key not in \
@@ -1915,6 +1943,13 @@ class ToolMilling(Excellon, AppTool):
             return
 
         option_changed = self.name2option[wdg_objname]
+
+        if option_changed in ('tools_mill_dwell', 'tools_mill_dwelltime', 'tools_mill_extracut'):
+            print("[DIAG] form_to_storage() | widget=%s, option=%s, new_value=%s" %
+                  (wdg_objname, option_changed,
+                   self.form_fields.get(option_changed, self.general_form_fields.get(option_changed)).get_value()
+                   if option_changed in self.form_fields or option_changed in self.general_form_fields else '?'),
+                  file=sys.stderr, flush=True)
 
         # update the tool specific parameters
         rows = sorted(set(index.row() for index in used_tools_table.selectedIndexes()))
@@ -3034,6 +3069,11 @@ class ToolMilling(Excellon, AppTool):
         outname = "%s_%s" % (geo_obj.obj_options["name"], 'cnc') if outname is None else outname
 
         tools_dict = self.sel_tools if tools_dict is None else tools_dict
+
+        for _uid, _td in tools_dict.items():
+            print("[DIAG] generate_cnc_job_handler() | tool=%s, dwell=%s, dwelltime=%s" %
+                  (_uid, _td['data'].get('tools_mill_dwell'), _td['data'].get('tools_mill_dwelltime')),
+                  file=sys.stderr, flush=True)
 
         # #############################################################################################################
         # Normalize tools_dict: ensure all tools have the required milling keys in their 'data'

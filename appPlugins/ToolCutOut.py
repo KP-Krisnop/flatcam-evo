@@ -401,7 +401,13 @@ class CutOut(AppTool):
             gap_type = 2
         self.ui.gaptype_combo.set_value(gap_type)
 
-        self.on_cutout_type(self.ui.gaptype_combo.get_value())
+        self.on_cutout_type(self.ui.cutout_type_radio.get_value())
+        self.ui.on_gap_type_radio(self.ui.gaptype_combo.get_value())
+
+        print("[DIAG] ToolCutOut.update_ui() | cutout_type=%s, gap_type=%s, dwell=%s, dwelltime=%s" %
+              (tool_dict.get("tools_cutout_type"), tool_dict.get("tools_cutout_gap_type"),
+               tool_dict.get("tools_mill_dwell"), tool_dict.get("tools_mill_dwelltime")),
+              file=sys.stderr, flush=True)
 
         self.ui.thin_depth_entry.set_value(float(tool_dict["tools_cutout_gap_depth"]))
         self.ui.mb_dia_entry.set_value(float(tool_dict["tools_cutout_mb_dia"]))
