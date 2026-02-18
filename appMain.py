@@ -2323,7 +2323,10 @@ class App(QtCore.QObject):
         self.defaults.report_usage("on_editing_start()")
 
         edited_object = self.collection.get_active()
+        print("DEBUG on_editing_start: edited_object=%r, kind=%s" % (
+            edited_object, getattr(edited_object, 'kind', None)), file=__import__('sys').stderr, flush=True)
         if edited_object is None:
+            print("DEBUG on_editing_start: EARLY RETURN - edited_object is None", file=__import__('sys').stderr, flush=True)
             self.inform.emit('[ERROR_NOTCL] %s %s' % (_("The Editor could not start."), _("No object is selected.")))
             return
 
@@ -2331,6 +2334,7 @@ class App(QtCore.QObject):
             if edited_object.kind != 'geometry':
                 edited_object.build_ui()
         else:
+            print("DEBUG on_editing_start: EARLY RETURN - kind not in allowed list", file=__import__('sys').stderr, flush=True)
             self.inform.emit('[WARNING_NOTCL] %s' % _("Select a Geometry, Gerber, Excellon or CNCJob Object to edit."))
             self.ui.menuobjects.setDisabled(False)
             return
@@ -2339,6 +2343,7 @@ class App(QtCore.QObject):
 
         if edited_object.kind == 'geometry':
             if self.geo_editor is None:
+                print("DEBUG on_editing_start: EARLY RETURN - geo_editor is None", file=__import__('sys').stderr, flush=True)
                 self.ui.menuobjects.setDisabled(False)
                 self.inform.emit('[ERROR_NOTCL] %s' % _("The Editor could not start."))
                 return
@@ -2346,13 +2351,32 @@ class App(QtCore.QObject):
             # store the Geometry Editor Toolbar visibility before entering the Editor
             self.geo_editor.toolbar_old_state = True if self.ui.geo_edit_toolbar.isVisible() else False
 
+            print("DEBUG on_editing_start: multigeo=%r, ui=%r" % (
+                edited_object.multigeo, edited_object.ui), file=__import__('sys').stderr, flush=True)
             # we set the notebook to hidden
             # self.ui.splitter.setSizes([0, 1])
             if edited_object.multigeo is True:
                 sel_rows = set()
-                for item in edited_object.ui.geo_tools_table.selectedItems():
-                    sel_rows.add(item.row())
+                for i in range(2):
+                    try:
+                        selected_items = edited_object.ui.geo_tools_table.selectedItems()
+                        print("DEBUG on_editing_start: selectedItems=%r" % (selected_items,), file=__import__('sys').stderr, flush=True)
+                        for item in selected_items:
+                            sel_rows.add(item.row())
+                        break
+                    except RuntimeError as e:
+                        if i == 0:
+                            # UI widget was deleted (e.g. user switched objects); rebuild and ask to re-select
+                            print("DEBUG on_editing_start: Retry 1/2 - RuntimeError: %s" % e, file=__import__('sys').stderr, flush=True)
+                            edited_object.build_ui()
+                            continue
+                        else:
+                            print("DEBUG on_editing_start: EARLY RETURN - RuntimeError: %s" % e, file=__import__('sys').stderr, flush=True)
+                            self.inform.emit('[WARNING_NOTCL] %s.' % _("No Tool Selected"))
+                            self.ui.menuobjects.setDisabled(False)
+                            return
                 sel_rows = list(sel_rows)
+                print("DEBUG on_editing_start: sel_rows=%r" % (sel_rows,), file=__import__('sys').stderr, flush=True)
 
                 if len(sel_rows) > 1:
                     self.inform.emit('[WARNING_NOTCL] %s' %

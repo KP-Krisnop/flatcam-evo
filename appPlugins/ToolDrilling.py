@@ -2081,6 +2081,9 @@ class ToolDrilling(Excellon, AppTool):
         return False
 
     def on_generate_cnc_job(self):
+        self.total_gcode = ''
+        self.total_gcode_parsed = []
+
         obj_name = self.ui.object_combo.currentText()
         # toolchange = self.ui.toolchange_cb.get_value()
         # determine if we have toolchange event or not

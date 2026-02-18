@@ -1123,29 +1123,22 @@ class ToolMilling(Excellon, AppTool):
         if self.target_obj:
             self.ui.param_frame.setDisabled(False)
 
-            # order the tools by tool diameter if it's the case
-            sorted_tools = []
-            for k, v in self.target_obj.tools.items():
-                sorted_tools.append(self.app.dec_format(float(v['tooldia'])))
-
             order = self.ui.order_combo.get_value()
             if order == 1:  # 'fwd'
-                sorted_tools.sort(reverse=False)
+                sorted_items = sorted(self.target_obj.tools.items(),
+                                      key=lambda it: it[1]['tooldia'], reverse=False)
+                new_tools = {}
+                for idx, (_k, v) in enumerate(sorted_items, start=1):
+                    new_tools[idx] = deepcopy(v)
+                self.target_obj.tools = new_tools
             elif order == 2:  # 'rev'
-                sorted_tools.sort(reverse=True)
-            else:
-                pass
+                sorted_items = sorted(self.target_obj.tools.items(),
+                                      key=lambda it: it[1]['tooldia'], reverse=True)
+                new_tools = {}
+                for idx, (_k, v) in enumerate(sorted_items, start=1):
+                    new_tools[idx] = deepcopy(v)
+                self.target_obj.tools = new_tools
 
-            # remake the excellon_tools dict in the order above
-            new_id = 1
-            new_tools = {}
-            for tooldia in sorted_tools:
-                for old_tool in self.target_obj.tools:
-                    if self.app.dec_format(float(self.target_obj.tools[old_tool]['tooldia'])) == tooldia:
-                        new_tools[new_id] = deepcopy(self.target_obj.tools[old_tool])
-                        new_id += 1
-
-            self.target_obj.tools = new_tools
             tools = [k for k in self.target_obj.tools]
 
         else:
@@ -1155,6 +1148,8 @@ class ToolMilling(Excellon, AppTool):
         # we have (n+2) rows because there are 'n' tools, each a row, plus the last 2 rows for totals.
         self.ui.tools_table_mill_exc.setRowCount(n + 2)
         self.tool_row = 0
+        self.tot_drill_cnt = 0
+        self.tot_slot_cnt = 0
 
         for tool_no in tools:
             # drill_cnt = 0  # variable to store the nr of drills per tool
