@@ -1,0 +1,51 @@
+# FlatCAM Evo — Python dependencies
+#
+# Install with:
+#   pip install -r requirements.txt
+#
+# macOS note: build Pillow from source to avoid libpng linkage issues:
+#   pip install --no-binary pillow -r requirements.txt
+#
+# numpy 2.x is not yet supported; pin to <2.0
+numpy>=1.16,<2.0
+
+# Core geometry
+scipy
+shapely
+
+# GUI
+PyQt6
+vispy
+darkdetect
+matplotlib
+
+# Imaging
+Pillow
+freetype-py
+scikit-image
+
+# File format support — vector / PCB
+ezdxf
+svglib
+lxml
+svg.path
+svgtrace
+pikepdf
+rasterio
+
+# PDF / document output
+reportlab
+rlPyCairo
+qrcode
+
+# Serial port (for CNC machine control)
+pyserial
+
+# Headless browser (HTML/SVG export)
+pyppeteer
+
+# Utilities
+simplejson
+rtree
+networkx
+ortools

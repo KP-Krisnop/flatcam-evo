@@ -1,0 +1,48 @@
+name: flatcam
+
+channels:
+  - conda-forge
+  - defaults
+
+dependencies:
+  - python=3.11
+  # System-level libraries (easiest via conda-forge)
+  - gdal
+  - geos
+  - freetype
+  - libspatialindex
+  - qpdf
+  - pkg-config
+  # Core numeric / geometry
+  - numpy>=1.16,<2.0
+  - scipy
+  - shapely
+  # GUI
+  - pyqt
+  - matplotlib
+  - scikit-image
+  - networkx
+  # Data / file formats
+  - lxml
+  - pikepdf
+  - reportlab
+  - rtree
+  - rasterio
+  # pip-only packages (not available on conda-forge)
+  - pip
+  - pip:
+    - PyQt6
+    - vispy
+    - darkdetect
+    - Pillow
+    - freetype-py
+    - ezdxf
+    - svglib
+    - svg.path
+    - svgtrace
+    - rlPyCairo
+    - qrcode
+    - pyserial
+    - pyppeteer
+    - simplejson
+    - ortools
