@@ -1,4 +1,3 @@
-#!/opt/homebrew/Cellar/flatcam-evo/8.9.95/libexec/bin/python3
 import sys
 import os
 import traceback
