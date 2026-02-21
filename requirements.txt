@@ -1,51 +1,58 @@
-# FlatCAM Evo — Python dependencies
-#
-# Install with:
-#   pip install -r requirements.txt
-#
-# macOS note: build Pillow from source to avoid libpng linkage issues:
-#   pip install --no-binary pillow -r requirements.txt
-#
-# numpy 2.x is not yet supported; pin to <2.0
-numpy>=1.16,<2.0
+# #################################################################################################
+# Verified to work with Python 3.11
+# #################################################################################################
 
-# Core geometry
-scipy
-shapely
 
-# GUI
-PyQt6
-vispy
-darkdetect
-matplotlib
+# #################################################################################################
+# This file contains python only requirements to be installed with pip
 
-# Imaging
-Pillow
-freetype-py
-scikit-image
+# Python packages that cannot be installed with pip (e.g. GDAL) are not included.
+# For Windows, GDAL wheel can be found here: https://github.com/cgohlke/geospatial-wheels
 
-# File format support — vector / PCB
-ezdxf
-svglib
+# Usage: pip install -r requirements.txt
+# #################################################################################################
+
+setuptools
+numpy>=1.16, <2.0
+cycler>=0.10
+python-dateutil>=2.1
+kiwisolver>=1.1
+six
+dill
+simplejson
+qrcode>=6.1
+
+rtree
+# foronoi>=1.0.3
+shapely>=2.0
+
+# ###############################
+# OR-TOOLS package is now optional
+ortools>=7.0
+# ###############################
+
 lxml
-svg.path
-svgtrace
-pikepdf
-rasterio
+svg.path>=4.0
+svglib
+fontTools
+ezdxf
 
-# PDF / document output
-reportlab
-rlPyCairo
-qrcode
-
-# Serial port (for CNC machine control)
-pyserial
-
-# Headless browser (HTML/SVG export)
+reportlab>=3.5
+pyserial>=3.4
+pikepdf>=2.0
 pyppeteer
 
-# Utilities
-simplejson
-rtree
-networkx
-ortools
+matplotlib>=3.5.0
+pyopengl
+pyqt6>=6.1.0
+freetype-py
+vispy>=0.9.0
+# pyqtdarktheme==1.1.1
+
+svgtrace
+
+# To detect OS dark mode
+darkdetect
+
+gdal
+rasterio

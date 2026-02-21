@@ -15,34 +15,37 @@ dependencies:
   - pkg-config
   # Core numeric / geometry
   - numpy>=1.16,<2.0
-  - scipy
-  - shapely
+  - shapely>=2.0
   # GUI
   - pyqt
-  - matplotlib
-  - scikit-image
-  - networkx
+  - matplotlib>=3.5.0
   # Data / file formats
   - lxml
-  - pikepdf
-  - reportlab
+  - pikepdf>=2.0
+  - reportlab>=3.5
   - rtree
   - rasterio
-  # pip-only packages (not available on conda-forge)
+  - ezdxf
+  - fonttools
+  # pip-only packages
   - pip
   - pip:
-    - PyQt6
-    - vispy
-    - darkdetect
-    - Pillow
-    - freetype-py
-    - ezdxf
-    - svglib
-    - svg.path
-    - svgtrace
-    - rlPyCairo
-    - qrcode
-    - pyserial
-    - pyppeteer
+    - setuptools
+    - cycler>=0.10
+    - python-dateutil>=2.1
+    - kiwisolver>=1.1
+    - six
+    - dill
     - simplejson
-    - ortools
+    - qrcode>=6.1
+    - ortools>=7.0
+    - svg.path>=4.0
+    - svglib
+    - pyserial>=3.4
+    - pyppeteer
+    - pyopengl
+    - PyQt6>=6.1.0
+    - freetype-py
+    - vispy>=0.9.0
+    - svgtrace
+    - darkdetect
